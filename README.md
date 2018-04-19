@@ -1,6 +1,6 @@
 # ff
 
-Find a file quickly by file pattern
+Find and open a file quickly by file pattern
 
 ## Installation
 

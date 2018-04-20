@@ -36,11 +36,13 @@ func fileMatches(pattern string) []string {
 
 func chooseFile(files []string) string {
   prompt := promptui.Select{
+    Label: "Choose file",
     Items: files,
     Size: 10,
     Searcher: func(input string, index int) bool {
       return fuzzy.Match(input, files[index])
     },
+    StartInSearchMode: true,
   }
   _, file, err := prompt.Run()
   if err != nil {

@@ -4,6 +4,7 @@ import (
   "fmt"
   "os"
   "syscall"
+  "strings"
   "path/filepath"
   "github.com/manifoldco/promptui"
   "github.com/renstrom/fuzzysearch/fuzzy"
@@ -11,11 +12,19 @@ import (
 
 var debug bool
 
+// TODO josh: read this out of .gitignore if available
+var ignorePatterns []string = []string{".min.js", ".git", "node_modules"}
+
 func files(dir string) []string {
   files := make([]string, 0, 30)
   filepath.Walk(dir, func(path string, _ os.FileInfo, err error) error {
     if err != nil {
       fmt.Fprintln(os.Stderr, err)
+    }
+    for _, pattern := range ignorePatterns {
+      if strings.Contains(path, pattern) {
+        return nil
+      }
     }
     files = append(files, path)
     return nil

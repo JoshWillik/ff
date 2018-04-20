@@ -18,4 +18,5 @@ ff <pattern>
 
 - if more than one match, allow chosing which file to open
 - don't require pattern
-- always do search from git root if inside a git project
+- -r to do search from git root if inside a git project
+- read ignore paths from .gitignore

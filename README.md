@@ -1,6 +1,6 @@
 # ff
 
-Find and open a file quickly by file pattern
+Find and open a file quickly by sublime text style fuzzy match
 
 ## Installation
 
@@ -16,6 +16,6 @@ ff <pattern>
 
 ## Plans
 
-- support Sublime Text style fuzzy matching
 - if more than one match, allow chosing which file to open
+- don't require pattern
 - always do search from git root if inside a git project

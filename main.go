@@ -4,11 +4,13 @@ import (
   "os"
   "syscall"
   "path/filepath"
+  "github.com/renstrom/fuzzysearch/fuzzy"
 )
 
 func main() {
   debug := os.Getenv("DEBUG") != ""
   dir, err := os.Getwd()
+  dir = dir+"/"
   if err != nil {
     panic(err)
   }
@@ -18,11 +20,18 @@ func main() {
   }
   pattern := os.Args[1]
   if debug {
-    fmt.Fprintln(os.Stderr, "searching "+dir+"/"+pattern)
+    fmt.Fprintln(os.Stderr, "searching "+pattern+" in "+dir)
   }
-  files, err := filepath.Glob(dir+"/"+pattern)
+  all_files, err := filepath.Glob(dir+"/**")
   if err != nil {
     fmt.Fprintln(os.Stderr, err)
+  }
+  files := make([]string, 0, 20)
+  for _, path := range all_files {
+    rel_path := path[len(dir):]
+    if fuzzy.Match(pattern, rel_path) {
+      files = append(files, rel_path)
+    }
   }
   if len(files) == 0 {
     fmt.Fprintln(os.Stderr, "no matches")
@@ -50,7 +59,7 @@ func main() {
   args := []string{file}
   env := os.Environ()
   if debug {
-    fmt.Fprintf(os.Stderr, "running %s %v %s\n", editor, args, env)
+    fmt.Fprintf(os.Stderr, "running %s %v\n", editor, args)
   }
   if err := syscall.Exec(editor, args, env); err != nil {
     fmt.Fprintln(os.Stderr, err)

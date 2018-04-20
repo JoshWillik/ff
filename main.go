@@ -1,9 +1,11 @@
 package main
+
 import (
   "fmt"
   "os"
   "syscall"
   "path/filepath"
+  "github.com/manifoldco/promptui"
   "github.com/renstrom/fuzzysearch/fuzzy"
 )
 
@@ -30,6 +32,21 @@ func fileMatches(pattern string) []string {
     }
   }
   return files
+}
+
+func chooseFile(files []string) string {
+  prompt := promptui.Select{
+    Items: files,
+    Size: 10,
+    Searcher: func(input string, index int) bool {
+      return fuzzy.Match(input, files[index])
+    },
+  }
+  _, file, err := prompt.Run()
+  if err != nil {
+    panic(err)
+  }
+  return file
 }
 
 func openFile(path string) {
@@ -60,12 +77,11 @@ func main() {
     fmt.Fprintln(os.Stderr, "no matches")
     os.Exit(1)
   }
+  file := files[0]
   if len(files) > 1 {
-    fmt.Println("More than 1 file match")
-    for i, file := range files {
-      fmt.Printf("%d: %s\n", i, file)
-    }
-    // TODO josh: allow picking which one eventually
+    file = chooseFile(files)
+  }
+  if file == "" {
     os.Exit(1)
   }
   openFile(files[0])

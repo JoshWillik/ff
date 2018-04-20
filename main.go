@@ -11,6 +11,18 @@ import (
 
 var debug bool
 
+func files(dir string) []string {
+  files := make([]string, 0, 30)
+  filepath.Walk(dir, func(path string, _ os.FileInfo, err error) error {
+    if err != nil {
+      fmt.Fprintln(os.Stderr, err)
+    }
+    files = append(files, path)
+    return nil
+  })
+  return files
+}
+
 func mustGetwd() string {
   dir, err := os.Getwd()
   if err != nil {
@@ -24,10 +36,7 @@ func fileMatches(pattern string) []string {
   if debug {
     fmt.Fprintln(os.Stderr, "searching "+pattern+" in "+dir)
   }
-  all_files, err := filepath.Glob(dir+"/**")
-  if err != nil {
-    fmt.Fprintln(os.Stderr, err)
-  }
+  all_files := files(dir)
   files := make([]string, 0, 20)
   for _, path := range all_files {
     rel_path := path[len(dir):]

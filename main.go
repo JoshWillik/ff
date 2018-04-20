@@ -11,12 +11,16 @@ import (
 
 var debug bool
 
-func fileMatches(pattern string) []string {
+func mustGetwd() string {
   dir, err := os.Getwd()
-  dir = dir+"/"
   if err != nil {
     panic(err)
   }
+  return dir
+}
+
+func fileMatches(pattern string) []string {
+  dir := mustGetwd()+"/"
   if debug {
     fmt.Fprintln(os.Stderr, "searching "+pattern+" in "+dir)
   }
@@ -57,7 +61,7 @@ func openFile(path string) {
     fmt.Fprintf(os.Stderr, "$EDITOR not configured")
     fmt.Println(path)
   }
-  args := []string{path}
+  args := []string{editor, path}
   env := os.Environ()
   if debug {
     fmt.Fprintf(os.Stderr, "running %s %v\n", editor, args)
@@ -86,5 +90,5 @@ func main() {
   if file == "" {
     os.Exit(1)
   }
-  openFile(files[0])
+  openFile(mustGetwd()+"/"+file)
 }

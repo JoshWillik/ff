@@ -6,7 +6,7 @@ import (
   "syscall"
   "strings"
   "path/filepath"
-  "github.com/bradfitz/slice"
+  "sort"
   "github.com/manifoldco/promptui"
   "github.com/renstrom/fuzzysearch/fuzzy"
 )
@@ -53,7 +53,7 @@ func fileMatches(pattern string) []string {
   }
   out_files := make([]string, 0, 20)
   ranked := fuzzy.RankFind(pattern, rel_files)
-  slice.Sort(ranked, func(a, b int) bool {
+  sort.Slice(ranked, func(a, b int) bool {
     return ranked[a].Distance < ranked[b].Distance
   })
   for _, item := range ranked {

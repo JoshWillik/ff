@@ -1,17 +1,21 @@
 package main
 
 import (
+  "flag"
   "fmt"
   "os"
-  "syscall"
-  "strings"
   "path/filepath"
   "sort"
+  "strings"
+  "syscall"
   "github.com/manifoldco/promptui"
   "github.com/renstrom/fuzzysearch/fuzzy"
 )
 
 var debug bool
+// TODO josh: evaluate if this feature should stay
+var printPath = flag.Bool("p", false,
+  "print the path of the matched file instead of opening")
 
 // TODO josh: read this out of .gitignore if available
 var ignorePatterns []string = []string{".min.js", ".git", "node_modules"}
@@ -99,12 +103,15 @@ func openFile(path string) {
 }
 
 func main() {
+  flag.Parse()
   debug = os.Getenv("DEBUG") != ""
+  // TODO josh: consider flags when calculating arg length
+  // TODO josh: move into function
   if len(os.Args) < 2 {
-    fmt.Println("Usage: ff <pattern>")
+    fmt.Println("Usage: ff [-p] <pattern>")
     os.Exit(1)
   }
-  files := fileMatches(os.Args[1])
+  files := fileMatches(os.Args[len(os.Args)-1])
   if len(files) == 0 {
     fmt.Fprintln(os.Stderr, "no matches")
     os.Exit(1)
@@ -116,5 +123,9 @@ func main() {
   if file == "" {
     os.Exit(1)
   }
-  openFile(mustGetwd()+"/"+file)
+  if *printPath {
+    fmt.Println(mustGetwd()+"/"+file)
+  } else {
+    openFile(mustGetwd()+"/"+file)
+  }
 }

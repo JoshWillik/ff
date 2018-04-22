@@ -6,6 +6,7 @@ import (
   "syscall"
   "strings"
   "path/filepath"
+  "github.com/bradfitz/slice"
   "github.com/manifoldco/promptui"
   "github.com/renstrom/fuzzysearch/fuzzy"
 )
@@ -45,15 +46,23 @@ func fileMatches(pattern string) []string {
   if debug {
     fmt.Fprintln(os.Stderr, "searching "+pattern+" in "+dir)
   }
-  all_files := files(dir)
-  files := make([]string, 0, 20)
-  for _, path := range all_files {
+  rel_files := make([]string, 0, 20)
+  for _, path := range files(dir) {
     rel_path := path[len(dir):]
-    if fuzzy.Match(pattern, rel_path) {
-      files = append(files, rel_path)
-    }
+    rel_files = append(rel_files, rel_path)
   }
-  return files
+  out_files := make([]string, 0, 20)
+  ranked := fuzzy.RankFind(pattern, rel_files)
+  slice.Sort(ranked, func(a, b int) bool {
+    return ranked[a].Distance < ranked[b].Distance
+  })
+  for _, item := range ranked {
+    if debug {
+      fmt.Printf("distance=%d %s\n", item.Distance, item.Target)
+    }
+    out_files = append(out_files, item.Target)
+  }
+  return out_files
 }
 
 func chooseFile(files []string) string {

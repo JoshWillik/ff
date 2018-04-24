@@ -37,7 +37,7 @@ func files(dir string) []string {
   return files
 }
 
-func mustGetwd() string {
+func mustGetWd() string {
   dir, err := os.Getwd()
   if err != nil {
     panic(err)
@@ -46,7 +46,7 @@ func mustGetwd() string {
 }
 
 func fileMatches(pattern string) []string {
-  dir := mustGetwd()+"/"
+  dir := mustGetWd()+"/"
   if debug {
     fmt.Fprintln(os.Stderr, "searching "+pattern+" in "+dir)
   }
@@ -118,14 +118,19 @@ func main() {
   }
   file := files[0]
   if len(files) > 1 {
-    file = chooseFile(files)
+    if *printPath {
+      for _, path := range files {
+        fmt.Println(path)
+      }
+      os.Exit(0)
+    } else {
+      file = chooseFile(files)
+    }
   }
-  if file == "" {
-    os.Exit(1)
-  }
+  workDir := mustGetWd()+"/"
   if *printPath {
-    fmt.Println(mustGetwd()+"/"+file)
+    fmt.Println(workDir+file)
   } else {
-    openFile(mustGetwd()+"/"+file)
+    openFile(workDir+file)
   }
 }

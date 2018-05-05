@@ -13,9 +13,10 @@ import (
   "github.com/renstrom/fuzzysearch/fuzzy"
 )
 
+var exit_ctrl_c = 130
 var debug bool
 // TODO josh: read this out of .gitignore if available
-var ignorePatterns []string = []string{".min.js", ".git", "node_modules"}
+var ignorePatterns = []string{".min.js", ".git", "node_modules"}
 
 func files(dir string, customIgnore []string) []string {
   files := make([]string, 0, 30)
@@ -93,7 +94,10 @@ func chooseFile(files []string) string {
     },
   }
   _, file, err := prompt.Run()
-  if err != nil {
+  if err == promptui.ErrInterrupt {
+    os.Exit(exit_ctrl_c)
+  } else if err != nil {
+    fmt.Println(err)
     panic(err)
   }
   return file

@@ -16,13 +16,19 @@ var debug bool
 // TODO josh: read this out of .gitignore if available
 var ignorePatterns []string = []string{".min.js", ".git", "node_modules"}
 
-func files(dir string) []string {
+func files(dir string, customIgnore []string) []string {
   files := make([]string, 0, 30)
+  // TODO josh: skip directories
   filepath.Walk(dir, func(path string, _ os.FileInfo, err error) error {
     if err != nil {
       fmt.Fprintln(os.Stderr, err)
     }
     for _, pattern := range ignorePatterns {
+      if strings.Contains(path, pattern) {
+        return nil
+      }
+    }
+    for _, pattern := range customIgnore {
       if strings.Contains(path, pattern) {
         return nil
       }
@@ -41,13 +47,13 @@ func mustGetWd() string {
   return dir
 }
 
-func fileMatches(pattern string) []string {
+func fileMatches(pattern string, ignore []string) []string {
   dir := mustGetWd()+"/"
   if debug {
     fmt.Fprintln(os.Stderr, "searching "+pattern+" in "+dir)
   }
   rel_files := make([]string, 0, 20)
-  for _, path := range files(dir) {
+  for _, path := range files(dir, ignore) {
     rel_path := path[len(dir):]
     rel_files = append(rel_files, rel_path)
   }
@@ -101,13 +107,14 @@ func openFile(path string) {
 type options struct{
   Print bool
   Pattern string
+  Ignore []string
 }
 
 func parseArgs() options {
   parsed , _ := docopt.ParseDoc(`Find File (and open it)
 
 Usage:
-  ff [-p | --print] <pattern>
+  ff [-p | --print] [--ignore=<dir>]... <pattern>
   ff -h | --help
 
 Options:
@@ -123,7 +130,7 @@ Options:
 func main() {
   args := parseArgs()
   debug = os.Getenv("DEBUG") != ""
-  files := fileMatches(args.Pattern)
+  files := fileMatches(args.Pattern, args.Ignore)
   if len(files) == 0 {
     fmt.Fprintln(os.Stderr, "no matches")
     os.Exit(1)

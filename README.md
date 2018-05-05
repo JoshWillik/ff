@@ -11,12 +11,18 @@ go install github.com/joshwillik/ff
 ## Usage
 
 ```
-ff <pattern>
+Find File (and open it in $EDITOR)
+
+Usage:
+  ff [-p | --print] [--ignore=<dir>]... <pattern>
+  ff -h | --help
+
+Options:
+  -h --help   Show this screen
+  -p --print  Print the path of the file instead of opening it
 ```
 
-## Plans
+## Planned
 
-- if more than one match, allow chosing which file to open
-- don't require pattern
 - -r to do search from git root if inside a git project
 - read ignore paths from .gitignore

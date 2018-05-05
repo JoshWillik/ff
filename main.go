@@ -33,7 +33,9 @@ func files(dir string, customIgnore []string) []string {
         }
       }
     }
-    files = append(files, path)
+    if (!file.IsDir()) {
+      files = append(files, path)
+    }
     return nil
   })
   return files

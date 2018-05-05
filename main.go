@@ -1,22 +1,18 @@
 package main
 
 import (
-  "flag"
   "fmt"
   "os"
   "path/filepath"
   "sort"
   "strings"
   "syscall"
+  "github.com/docopt/docopt-go"
   "github.com/manifoldco/promptui"
   "github.com/renstrom/fuzzysearch/fuzzy"
 )
 
 var debug bool
-// TODO josh: evaluate if this feature should stay
-var printPath = flag.Bool("p", false,
-  "print the path of the matched file instead of opening")
-
 // TODO josh: read this out of .gitignore if available
 var ignorePatterns []string = []string{".min.js", ".git", "node_modules"}
 
@@ -102,23 +98,39 @@ func openFile(path string) {
   }
 }
 
-func main() {
-  flag.Parse()
-  debug = os.Getenv("DEBUG") != ""
-  // TODO josh: consider flags when calculating arg length
-  // TODO josh: move into function
-  if len(os.Args) < 2 {
-    fmt.Println("Usage: ff [-p] <pattern>")
-    os.Exit(1)
+type options struct{
+  Print bool
+  Pattern string
+}
+
+func parseArgs() options {
+  parsed , _ := docopt.ParseDoc(`Find File (and open it)
+
+Usage:
+  ff [-p | --print] <pattern>
+  ff -h | --help
+
+Options:
+  -h --help   Show this screen
+  -p --print  Print the path of the file instead of opening it`)
+  opt := options{}
+  if err := parsed.Bind(&opt); err != nil {
+    panic(err)
   }
-  files := fileMatches(os.Args[len(os.Args)-1])
+  return opt
+}
+
+func main() {
+  args := parseArgs()
+  debug = os.Getenv("DEBUG") != ""
+  files := fileMatches(args.Pattern)
   if len(files) == 0 {
     fmt.Fprintln(os.Stderr, "no matches")
     os.Exit(1)
   }
   file := files[0]
   if len(files) > 1 {
-    if *printPath {
+    if args.Print {
       for _, path := range files {
         fmt.Println(path)
       }
@@ -128,7 +140,7 @@ func main() {
     }
   }
   workDir := mustGetWd()+"/"
-  if *printPath {
+  if args.Print {
     fmt.Println(workDir+file)
   } else {
     openFile(workDir+file)

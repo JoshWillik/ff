@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "os"
+  "os/exec"
   "path/filepath"
   "sort"
   "strings"
@@ -41,16 +42,25 @@ func files(dir string, customIgnore []string) []string {
   return files
 }
 
-func mustGetWd() string {
+func mustBaseDir(gitRoot bool) string {
   dir, err := os.Getwd()
   if err != nil {
     panic(err)
   }
-  return dir
+  if (gitRoot) {
+    output, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+    if err != nil {
+      fmt.Println()
+      fmt.Fprintln(os.Stderr, "Could not find git root")
+      os.Exit(1)
+    }
+    dir = strings.Trim(string(output), "\n")
+  }
+  return dir+"/"
 }
 
-func fileMatches(pattern string, ignore []string) []string {
-  dir := mustGetWd()+"/"
+func fileMatches(gitRoot bool, pattern string, ignore []string) []string {
+  dir := mustBaseDir(gitRoot)
   if debug {
     fmt.Fprintln(os.Stderr, "searching "+pattern+" in "+dir)
   }
@@ -108,6 +118,7 @@ func openFile(path string) {
 
 type options struct{
   Print bool
+  GitRoot bool
   Pattern string
   Ignore []string
 }
@@ -116,12 +127,14 @@ func parseArgs() options {
   parsed , _ := docopt.ParseDoc(`Find File (and open it)
 
 Usage:
-  ff [-p | --print] [--ignore=<dir>]... <pattern>
-  ff -h | --help
+  ff [-p|--print] [-r|--git-root] [--ignore=<dir>]... <pattern>
+  ff -h|--help
 
 Options:
-  -h --help   Show this screen
-  -p --print  Print the path of the file instead of opening it`)
+  -h --help      Show this screen
+  -p --print     Print the path of the file instead of opening it
+  -r --git-root  Search for the file from the project git root
+  `)
   opt := options{}
   if err := parsed.Bind(&opt); err != nil {
     panic(err)
@@ -132,7 +145,7 @@ Options:
 func main() {
   args := parseArgs()
   debug = os.Getenv("DEBUG") != ""
-  files := fileMatches(args.Pattern, args.Ignore)
+  files := fileMatches(args.GitRoot, args.Pattern, args.Ignore)
   if len(files) == 0 {
     fmt.Fprintln(os.Stderr, "no matches")
     os.Exit(1)
@@ -148,7 +161,7 @@ func main() {
       file = chooseFile(files)
     }
   }
-  workDir := mustGetWd()+"/"
+  workDir := mustBaseDir(args.GitRoot)
   if args.Print {
     fmt.Println(workDir+file)
   } else {

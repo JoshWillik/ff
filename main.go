@@ -18,19 +18,19 @@ var ignorePatterns []string = []string{".min.js", ".git", "node_modules"}
 
 func files(dir string, customIgnore []string) []string {
   files := make([]string, 0, 30)
+  ignores := append(ignorePatterns, customIgnore...)
   // TODO josh: skip directories
-  filepath.Walk(dir, func(path string, _ os.FileInfo, err error) error {
+  filepath.Walk(dir, func(path string, file os.FileInfo, err error) error {
     if err != nil {
       fmt.Fprintln(os.Stderr, err)
     }
-    for _, pattern := range ignorePatterns {
+    for _, pattern := range ignores {
       if strings.Contains(path, pattern) {
-        return nil
-      }
-    }
-    for _, pattern := range customIgnore {
-      if strings.Contains(path, pattern) {
-        return nil
+        if (file.IsDir()) {
+          return filepath.SkipDir
+        } else {
+          return nil
+        }
       }
     }
     files = append(files, path)
